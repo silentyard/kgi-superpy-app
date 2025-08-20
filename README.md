@@ -6,17 +6,26 @@
 
 ## 繁體中文
 
-一個使用 kgisuperpy 函式庫提供基本證券登入登出功能的 Python 應用程式。
+一個使用 kgisuperpy 函式庫提供基本證券登入登出功能的 Python 應用程式，現在支援多帳戶類型管理。
+
+### 🆕 最新功能 (v1.1.0)
+
+- 🎯 **多帳戶類型支援**：同時支援證券和期貨帳戶
+- 🔄 **動態帳戶切換**：無需重新登入即可切換帳戶類型
+- 📊 **詳細帳戶資訊**：完整的帳戶統計和功能測試
+- 🧪 **綜合測試套件**：多帳戶功能驗證工具
 
 ### 功能特色
 
 - 🔐 安全的登入/登出功能
-- 📊 帳戶資訊顯示
+- 📊 帳戶資訊顯示與詳細分析
 - 🎯 支援模擬和正式模式
 - 🖥️ **圖形用戶界面 (GUI)** 採用現代化設計
 - 💻 互動式命令行界面
 - 📱 簡單易用的 API 封裝
 - 🌐 多執行緒 GUI 提供流暢的用戶體驗
+- 🔄 **多帳戶類型管理**（證券/期貨/全部）
+- 🧪 **帳戶功能測試**工具
 
 ### 安裝
 
@@ -63,6 +72,23 @@ GUI 提供以下功能：
 - 📝 完整的日誌記錄
 - ⚡ 多執行緒操作（非阻塞 UI）
 - 🌍 中文語言支援
+- 🎯 **帳戶類型選擇**：可選擇全部/證券/期貨帳戶
+- 🔄 **動態切換**：登入後可切換不同帳戶類型
+- 📋 **詳細資訊**：查看帳戶詳情和功能測試
+- 🧪 **功能測試**：測試各帳戶類型的可用功能
+
+##### 🆕 多帳戶功能使用
+
+1. **選擇帳戶類型**：在登入前選擇要顯示的帳戶類型
+   - **全部帳戶**：顯示所有可用的證券和期貨帳戶
+   - **僅證券**：只顯示證券帳戶
+   - **僅期貨**：只顯示期貨帳戶
+
+2. **登入後操作**：
+   - 點擊 **"Account Details"** 查看所有帳戶的詳細資訊
+   - 點擊 **"Test Functions"** 測試各帳戶類型的功能
+   - 點擊 **"Switch Type"** 動態切換帳戶類型
+   - 點擊 **"Client Status"** 查看連線和帳戶統計
 
 #### 命令行界面
 
@@ -76,9 +102,26 @@ python main.py
 
 這將啟動互動式選單，您可以：
 - 使用您的憑證登入
+- **選擇帳戶類型**（全部/證券/期貨）
 - 查看帳戶資訊
+- **切換帳戶類型**（無需重新登入）
 - 檢查客戶端狀態
 - 登出
+
+##### 🆕 多帳戶功能使用流程
+
+1. **登入時選擇帳戶類型**：
+   ```
+   Account Type Options:
+   1. All accounts       # 顯示所有帳戶
+   2. Stock accounts only    # 僅顯示證券帳戶  
+   3. Futures accounts only  # 僅顯示期貨帳戶
+   ```
+
+2. **登入後使用新功能**：
+   - 選項 4：**Switch Account Type** - 動態切換帳戶類型
+   - 查看詳細的帳戶統計資訊
+   - 測試不同帳戶類型的功能
 
 #### 命令行選項
 
@@ -127,15 +170,31 @@ export KGI_PASSWORD=your_password
 kgi-superpy-app/
 ├── kgi_trading_app/
 │   ├── __init__.py          # 套件初始化
-│   └── client.py            # 主要交易客戶端類別
-├── main.py                  # 命令行應用程式入口點
-├── gui_main.py             # GUI 應用程式入口點
+│   └── client.py            # 主要交易客戶端類別（🆕 多帳戶支援）
+├── main.py                  # 命令行應用程式入口點（🆕 帳戶類型選擇）
+├── gui_main.py             # GUI 應用程式入口點（🆕 增強界面）
+├── test_multi_accounts.py   # 🆕 多帳戶功能測試程式
 ├── start_gui.bat           # Windows GUI 啟動器
 ├── requirements.txt         # Python 依賴項
-├── README.md               # 本文件
+├── README.md               # 本文件（🆕 多帳戶功能說明）
+├── CHANGELOG.md            # 🆕 版本變更記錄
+├── LICENSE                 # 授權條款
+├── examples/               # 使用範例
+│   ├── basic_usage.py      # 基本使用範例
+│   └── gui_usage.py        # GUI 使用範例
+├── tests/                  # 測試檔案
+│   ├── test_client.py      # 客戶端測試
+│   └── quick_test.py       # 快速功能測試
 └── .github/
     └── copilot-instructions.md
 ```
+
+#### 🆕 新增檔案說明
+
+- **`test_multi_accounts.py`**：專門測試多帳戶功能的綜合測試程式
+- **`CHANGELOG.md`**：記錄所有版本的變更歷史
+- 增強的 **`client.py`**：新增多帳戶類型支援和功能測試
+- 更新的 **`main.py`** 和 **`gui_main.py`**：支援帳戶類型選擇和切換
 
 ### GUI 截圖和功能
 
@@ -146,21 +205,28 @@ GUI 提供現代化、用戶友好的界面，包含以下組件：
    - 模擬/正式模式的單選按鈕
    - 正式模式的自動安全警告
 
-2. **登入區域**
+2. **🆕 帳戶類型選擇**
+   - 全部帳戶/僅證券/僅期貨的單選按鈕
+   - 登入前預先選擇要顯示的帳戶類型
+
+3. **登入區域**
    - 用戶 ID 輸入欄位
    - 安全的密碼輸入（遮蔽顯示）
    - 登入/登出按鈕與狀態管理
 
-3. **連線狀態**
+4. **連線狀態**
    - 即時連線狀態顯示
    - 彩色狀態指示器
 
-4. **操作按鈕**
-   - 顯示帳戶（顯示帳戶資訊）
-   - 顯示客戶端狀態（顯示詳細客戶端資訊）
-   - 登出（安全登出與確認）
+5. **🆕 增強操作按鈕**
+   - **Show Accounts**：顯示當前可見的帳戶資訊
+   - **Account Details**：🆕 顯示所有帳戶的詳細資訊
+   - **Client Status**：顯示詳細客戶端資訊和統計
+   - **Switch Type**：🆕 動態切換帳戶類型
+   - **Test Functions**：🆕 測試各帳戶類型的可用功能
+   - **Logout**：安全登出與確認
 
-5. **資訊顯示**
+6. **資訊顯示**
    - 可滾動的日誌區域與時間戳記
    - 中文語言支援
    - 清除日誌功能
@@ -191,7 +257,36 @@ client = KGITradingClient(simulation=False)
 
 ##### 登入
 ```python
+# 基本登入
 success = client.login(user_id="YOUR_USER_ID", password="YOUR_PASSWORD")
+
+# 🆕 登入並指定帳戶類型
+success = client.login(user_id="YOUR_USER_ID", password="YOUR_PASSWORD", account_type="all")
+success = client.login(user_id="YOUR_USER_ID", password="YOUR_PASSWORD", account_type="stock")
+success = client.login(user_id="YOUR_USER_ID", password="YOUR_PASSWORD", account_type="futures")
+```
+
+##### 🆕 多帳戶管理
+```python
+# 取得可用帳戶類型統計
+types = client.get_available_account_types()
+# 回傳: {"stock": 1, "futures": 1, "total": 2}
+
+# 切換帳戶類型（無需重新登入）
+success = client.switch_account_type("stock")    # 切換到證券帳戶
+success = client.switch_account_type("futures")  # 切換到期貨帳戶
+success = client.switch_account_type("all")      # 切換到所有帳戶
+
+# 取得詳細帳戶資訊
+details = client.get_all_account_details()
+# 回傳詳細的帳戶資訊，包含：
+# - total_accounts: 總帳戶數
+# - current_visible_accounts: 目前可見帳戶數
+# - accounts: 每個帳戶的詳細資訊
+
+# 測試帳戶功能
+capabilities = client.test_account_capabilities()
+# 測試證券和期貨帳戶的可用功能
 ```
 
 ##### 登出
@@ -201,8 +296,13 @@ success = client.logout()
 
 ##### 取得帳戶資訊
 ```python
-accounts = client.get_account_list()
-client_info = client.get_client_info()
+# 基本帳戶資訊
+accounts = client.get_account_list()          # 取得當前可見的帳戶列表
+client_info = client.get_client_info()       # 取得客戶端基本資訊
+
+# 🆕 詳細帳戶資訊
+all_details = client.get_all_account_details()  # 取得所有帳戶詳細資訊
+account_types = client.get_available_account_types()  # 取得帳戶類型統計
 ```
 
 ### 安全特性
@@ -212,8 +312,43 @@ client_info = client.get_client_info()
 - **錯誤處理**：完整的錯誤處理和日誌記錄
 - **自動登出**：應用程式終止時確保登出
 
+### 🧪 測試工具
+
+#### 多帳戶功能測試
+
+使用專門的測試程式來驗證多帳戶功能：
+
+```bash
+python test_multi_accounts.py
+```
+
+此測試程式會：
+- 🔍 檢查登入前後的帳戶狀態
+- 🧪 測試不同帳戶類型的登入
+- 🔄 驗證帳戶切換功能
+- 📊 分析帳戶詳細資訊
+- ✅ 測試各帳戶的可用功能
+
+**注意**：要進行完整測試，需要：
+1. 擁有同時包含證券和期貨權限的真實帳號
+2. 修改測試程式中的 `test_real_login = True`
+3. 輸入真實的帳號密碼
+
+#### 快速功能測試
+
+檢查各個功能模組是否正常運作：
+
+```bash
+# 測試基本客戶端功能
+python tests/quick_test.py
+
+# 測試客戶端類別
+python tests/test_client.py
+```
+
 ### 使用範例
 
+#### 基本使用範例
 ```python
 from kgi_trading_app.client import KGITradingClient
 
@@ -237,6 +372,68 @@ if client.login("your_user_id", "your_password"):
 else:
     print("登入失敗！")
 ```
+
+#### 🆕 多帳戶使用範例
+```python
+from kgi_trading_app.client import KGITradingClient
+
+# 建立客戶端
+client = KGITradingClient(simulation=True)
+
+# 登入並顯示所有帳戶
+if client.login("your_user_id", "your_password", account_type="all"):
+    print("登入成功！")
+    
+    # 檢查可用的帳戶類型
+    types = client.get_available_account_types()
+    print(f"證券帳戶: {types['stock']} 個，期貨帳戶: {types['futures']} 個")
+    
+    # 取得詳細帳戶資訊
+    details = client.get_all_account_details()
+    print(f"總共 {details['total_accounts']} 個帳戶")
+    
+    # 切換到只顯示證券帳戶
+    if client.switch_account_type("stock"):
+        print("已切換到證券帳戶模式")
+        print(f"可見帳戶數: {len(client.get_account_list())}")
+    
+    # 測試帳戶功能
+    capabilities = client.test_account_capabilities()
+    if capabilities['stock_account_test']:
+        print("證券帳戶功能正常")
+    if capabilities['futures_account_test']:
+        print("期貨帳戶功能正常")
+    
+    # 登出
+    client.logout()
+```
+
+### 📝 版本資訊
+
+**當前版本**：v1.1.0 (2025-08-21)
+
+**主要更新**：
+- ✨ 新增多帳戶類型支援（證券/期貨）
+- 🔄 動態帳戶切換功能
+- 📊 詳細帳戶資訊和功能測試
+- 🧪 綜合測試套件
+
+**查看完整更新記錄**：[CHANGELOG.md](CHANGELOG.md)
+
+### 📋 功能對比表
+
+| 功能 | v1.0.0 | v1.1.0 |
+|------|--------|--------|
+| 基本登入/登出 | ✅ | ✅ |
+| 模擬/正式模式 | ✅ | ✅ |
+| GUI 界面 | ✅ | ✅ |
+| 命令行界面 | ✅ | ✅ |
+| 帳戶資訊顯示 | ✅ | ✅ |
+| **多帳戶類型支援** | ❌ | ✅ |
+| **動態帳戶切換** | ❌ | ✅ |
+| **詳細帳戶分析** | ❌ | ✅ |
+| **功能測試工具** | ❌ | ✅ |
+| **綜合測試套件** | ❌ | ✅ |
 
 ### 重要注意事項
 

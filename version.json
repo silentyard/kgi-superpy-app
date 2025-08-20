@@ -1,0 +1,43 @@
+{
+  "project": {
+    "name": "KGI Securities Trading Application",
+    "description": "A Python application providing basic securities login/logout functionality using kgisuperpy library with multi-account support",
+    "version": "1.1.0",
+    "release_date": "2025-08-21",
+    "author": "KGI SuperPy App Team",
+    "license": "MIT",
+    "python_requires": ">=3.8",
+    "homepage": "https://github.com/yourusername/kgi-superpy-app"
+  },
+  "history": [
+    {
+      "version": "1.0.0",
+      "date": "2025-08-20",
+      "type": "major",
+      "description": "Initial release with basic login/logout functionality",
+      "features": [
+        "Basic login/logout functionality",
+        "Simulation and production modes",
+        "Modern GUI interface",
+        "Interactive CLI",
+        "Account information display",
+        "Multi-threaded operations"
+      ]
+    },
+    {
+      "version": "1.1.0",
+      "date": "2025-08-21",
+      "type": "minor",
+      "description": "Multi-account type support and enhanced functionality",
+      "features": [
+        "Multi-account type support (Stock/Futures)",
+        "Dynamic account switching",
+        "Detailed account information",
+        "Account capabilities testing",
+        "Enhanced GUI with new features",
+        "Comprehensive testing suite"
+      ]
+    }
+  ],
+  "generated": "2025-08-21T03:08:14.112399"
+}

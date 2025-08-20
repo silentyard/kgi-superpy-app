@@ -101,11 +101,12 @@ def interactive_mode(client, user_id=None):
         print("1. Login")
         print("2. Show Account Information")
         print("3. Show Client Status")
-        print("4. Logout")
-        print("5. Exit")
+        print("4. Switch Account Type")
+        print("5. Logout")
+        print("6. Exit")
         print()
         
-        choice = input("Select an option (1-5): ").strip()
+        choice = input("Select an option (1-6): ").strip()
         
         if choice == '1':
             handle_login(client, user_id)
@@ -114,12 +115,14 @@ def interactive_mode(client, user_id=None):
         elif choice == '3':
             handle_client_status(client)
         elif choice == '4':
-            handle_logout(client)
+            handle_switch_account_type(client)
         elif choice == '5':
+            handle_logout(client)
+        elif choice == '6':
             print("Exiting application...")
             break
         else:
-            print("Invalid option. Please select 1-5.")
+            print("Invalid option. Please select 1-6.")
     
     # Force clean exit
     import os
@@ -146,11 +149,36 @@ def handle_login(client, user_id=None):
             print("Password cannot be empty.")
             return
         
-        print("Attempting to login...")
-        success = client.login(user_id, password)
+        # Ask for account type preference
+        print("\nAccount Type Options:")
+        print("1. All accounts")
+        print("2. Stock accounts only")
+        print("3. Futures accounts only")
+        
+        while True:
+            choice = input("Select account type (1-3): ").strip()
+            if choice == "1":
+                account_type = "all"
+                break
+            elif choice == "2":
+                account_type = "stock"
+                break
+            elif choice == "3":
+                account_type = "futures"
+                break
+            else:
+                print("Invalid choice. Please enter 1, 2, or 3.")
+        
+        print(f"Attempting to login with account type: {account_type}...")
+        success = client.login(user_id, password, account_type=account_type)
         
         if success:
             print("✓ Login successful!")
+            
+            # Show available account types
+            types = client.get_available_account_types()
+            print(f"Available accounts - Stock: {types['stock']}, Futures: {types['futures']}")
+            
         else:
             print("✗ Login failed. Please check your credentials.")
             
@@ -184,19 +212,6 @@ def handle_account_info(client):
         print("No accounts found.")
 
 
-def handle_client_status(client):
-    """Handle client status display."""
-    info = client.get_client_info()
-    
-    print("\nClient Status:")
-    print(f"  Simulation Mode: {info['simulation_mode']}")
-    print(f"  Logged In: {'✓' if info['logged_in'] else '✗'}")
-    print(f"  Account Count: {info['account_count']}")
-    print(f"  Has Stock Account: {'✓' if info['has_stock_account'] else '✗'}")
-    print(f"  Has Futures Account: {'✓' if info['has_futures_account'] else '✗'}")
-    print(f"  Contracts Status: {info['contracts_status']}")
-
-
 def handle_logout(client):
     """Handle logout process."""
     if not client.is_connected():
@@ -210,6 +225,56 @@ def handle_logout(client):
         print("✓ Logout successful!")
     else:
         print("✗ Logout failed.")
+
+
+def handle_switch_account_type(client):
+    """Handle account type switching."""
+    if not client.is_connected():
+        print("Not logged in. Please login first.")
+        return
+    
+    print("\nAccount Type Options:")
+    print("1. All accounts")
+    print("2. Stock accounts only")  
+    print("3. Futures accounts only")
+    
+    while True:
+        choice = input("Select account type (1-3): ").strip()
+        if choice == "1":
+            account_type = "all"
+            break
+        elif choice == "2":
+            account_type = "stock"
+            break
+        elif choice == "3":
+            account_type = "futures"
+            break
+        else:
+            print("Invalid choice. Please enter 1, 2, or 3.")
+    
+    success = client.switch_account_type(account_type)
+    
+    if success:
+        print(f"✓ Switched to {account_type} accounts successfully!")
+        handle_account_info(client)
+    else:
+        print(f"✗ Failed to switch to {account_type} accounts.")
+
+
+def handle_client_status(client):
+    """Handle client status display."""
+    info = client.get_client_info()
+    
+    print("\nClient Status:")
+    print(f"  Simulation Mode: {info['simulation_mode']}")
+    print(f"  Logged In: {'✓' if info['logged_in'] else '✗'}")
+    print(f"  Current Account Count: {info['account_count']}")
+    print(f"  Total Accounts: {info.get('total_accounts', 0)}")
+    print(f"  Stock Accounts: {info.get('stock_accounts', 0)}")
+    print(f"  Futures Accounts: {info.get('futures_accounts', 0)}")
+    print(f"  Has Stock Account: {'✓' if info['has_stock_account'] else '✗'}")
+    print(f"  Has Futures Account: {'✓' if info['has_futures_account'] else '✗'}")
+    print(f"  Contracts Status: {info['contracts_status']}")
 
 
 def demo_login_logout(client, user_id, password):

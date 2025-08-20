@@ -118,9 +118,28 @@ class KGITradingGUI:
                                     command=self.on_mode_change)
         prod_radio.grid(row=0, column=1, sticky=tk.W)
         
+        # Account type selection frame
+        account_type_frame = ttk.LabelFrame(main_frame, text="Account Type", padding="10")
+        account_type_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(0, 20))
+        account_type_frame.columnconfigure(2, weight=1)
+        
+        self.account_type_var = tk.StringVar(value="all")
+        
+        all_radio = ttk.Radiobutton(account_type_frame, text="All Accounts", 
+                                   variable=self.account_type_var, value="all")
+        all_radio.grid(row=0, column=0, sticky=tk.W, padx=(0, 20))
+        
+        stock_radio = ttk.Radiobutton(account_type_frame, text="Stock Only", 
+                                     variable=self.account_type_var, value="stock")
+        stock_radio.grid(row=0, column=1, sticky=tk.W, padx=(0, 20))
+        
+        futures_radio = ttk.Radiobutton(account_type_frame, text="Futures Only", 
+                                       variable=self.account_type_var, value="futures")
+        futures_radio.grid(row=0, column=2, sticky=tk.W)
+        
         # Login frame
         login_frame = ttk.LabelFrame(main_frame, text="Login Credentials", padding="10")
-        login_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(0, 20))
+        login_frame.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(0, 20))
         login_frame.columnconfigure(1, weight=1)
         
         # User ID
@@ -144,7 +163,7 @@ class KGITradingGUI:
         
         # Status frame
         status_frame = ttk.LabelFrame(main_frame, text="Connection Status", padding="10")
-        status_frame.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(0, 20))
+        status_frame.grid(row=4, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(0, 20))
         status_frame.columnconfigure(1, weight=1)
         
         self.status_label = ttk.Label(status_frame, text="Not connected", 
@@ -153,33 +172,51 @@ class KGITradingGUI:
         
         # Actions frame
         actions_frame = ttk.LabelFrame(main_frame, text="Actions", padding="10")
-        actions_frame.grid(row=4, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(0, 20))
+        actions_frame.grid(row=5, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(0, 20))
         
         # Action buttons
         self.show_accounts_btn = ttk.Button(actions_frame, text="Show Accounts", 
                                            style='Action.TButton',
                                            command=self.show_accounts,
                                            state='disabled')
-        self.show_accounts_btn.grid(row=0, column=0, padx=(0, 10), pady=(0, 5))
+        self.show_accounts_btn.grid(row=0, column=0, padx=(0, 5), pady=(0, 5))
         
-        self.show_status_btn = ttk.Button(actions_frame, text="Show Client Status", 
+        self.show_details_btn = ttk.Button(actions_frame, text="Account Details", 
+                                          style='Action.TButton',
+                                          command=self.show_account_details,
+                                          state='disabled')
+        self.show_details_btn.grid(row=0, column=1, padx=(0, 5), pady=(0, 5))
+        
+        self.show_status_btn = ttk.Button(actions_frame, text="Client Status", 
                                          style='Action.TButton',
                                          command=self.show_client_status,
                                          state='disabled')
-        self.show_status_btn.grid(row=0, column=1, padx=(0, 10), pady=(0, 5))
+        self.show_status_btn.grid(row=0, column=2, padx=(0, 5), pady=(0, 5))
+        
+        self.switch_account_btn = ttk.Button(actions_frame, text="Switch Type", 
+                                            style='Action.TButton',
+                                            command=self.switch_account_type,
+                                            state='disabled')
+        self.switch_account_btn.grid(row=0, column=3, padx=(0, 5), pady=(0, 5))
+        
+        self.test_capabilities_btn = ttk.Button(actions_frame, text="Test Functions", 
+                                               style='Action.TButton',
+                                               command=self.test_account_capabilities,
+                                               state='disabled')
+        self.test_capabilities_btn.grid(row=1, column=0, padx=(0, 5), pady=(5, 0))
         
         self.logout_btn = ttk.Button(actions_frame, text="Logout", 
                                     style='Action.TButton',
                                     command=self.logout_async,
                                     state='disabled')
-        self.logout_btn.grid(row=0, column=2, pady=(0, 5))
+        self.logout_btn.grid(row=1, column=1, padx=(0, 5), pady=(5, 0))
         
         # Information display frame
         info_frame = ttk.LabelFrame(main_frame, text="Information", padding="10")
-        info_frame.grid(row=5, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 20))
+        info_frame.grid(row=6, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 20))
         info_frame.columnconfigure(0, weight=1)
         info_frame.rowconfigure(0, weight=1)
-        main_frame.rowconfigure(5, weight=1)
+        main_frame.rowconfigure(6, weight=1)
         
         # Text widget with scrollbar
         text_frame = ttk.Frame(info_frame)
@@ -206,7 +243,7 @@ class KGITradingGUI:
         
         # Add welcome message
         self.add_log("歡迎使用 KGI Securities Trading Application GUI")
-        self.add_log("請選擇交易模式並輸入您的登入憑證")
+        self.add_log("請選擇交易模式和帳戶類型，然後輸入您的登入憑證")
         self.add_log("建議: 請先使用模擬模式進行測試")
         self.add_log("-" * 60)
     
@@ -294,14 +331,20 @@ class KGITradingGUI:
         if logged_in:
             self.login_button.configure(text="Logout", command=self.logout_async)
             self.show_accounts_btn.configure(state='normal')
+            self.show_details_btn.configure(state='normal')
             self.show_status_btn.configure(state='normal')
+            self.switch_account_btn.configure(state='normal')
+            self.test_capabilities_btn.configure(state='normal')
             self.logout_btn.configure(state='normal')
             self.user_id_entry.configure(state='disabled')
             self.password_entry.configure(state='disabled')
         else:
             self.login_button.configure(text="Login", command=self.login_async)
             self.show_accounts_btn.configure(state='disabled')
+            self.show_details_btn.configure(state='disabled')
             self.show_status_btn.configure(state='disabled')
+            self.switch_account_btn.configure(state='disabled')
+            self.test_capabilities_btn.configure(state='disabled')
             self.logout_btn.configure(state='disabled')
             self.user_id_entry.configure(state='normal')
             self.password_entry.configure(state='normal')
@@ -316,18 +359,19 @@ class KGITradingGUI:
             try:
                 user_id = self.user_id_var.get().strip()
                 password = self.password_var.get().strip()
+                account_type = self.account_type_var.get()
                 
                 if not user_id or not password:
                     self.add_log("請輸入用戶ID和密碼", "ERROR")
                     return
                 
-                self.add_log(f"正在嘗試登入用戶: {user_id}")
+                self.add_log(f"正在嘗試登入用戶: {user_id} (帳戶類型: {account_type})")
                 self.update_status("登入中...", "INFO")
                 
                 # Reinitialize client with current mode
                 self.client = KGITradingClient(simulation=self.simulation_mode)
                 
-                success = self.client.login(user_id, password)
+                success = self.client.login(user_id, password, account_type=account_type)
                 
                 if success:
                     self.add_log("登入成功！", "SUCCESS")
@@ -336,13 +380,15 @@ class KGITradingGUI:
                     
                     # Show account information
                     accounts = self.client.get_account_list()
-                    self.add_log(f"找到 {len(accounts)} 個帳戶")
+                    account_types = self.client.get_available_account_types()
+                    
+                    self.add_log(f"找到 {len(accounts)} 個帳戶 (證券: {account_types['stock']}, 期貨: {account_types['futures']})")
                     
                     for i, account in enumerate(accounts):
-                        account_type = "證券" if "Stock" in str(type(account)) else "期貨"
+                        account_type_name = "證券" if "Stock" in str(type(account)) else "期貨"
                         signed_status = "已簽署" if hasattr(account, 'signed') and account.signed else "未簽署"
                         
-                        self.add_log(f"帳戶 {i+1}: {account_type}")
+                        self.add_log(f"帳戶 {i+1}: {account_type_name}")
                         self.add_log(f"  身份證字號: {account.person_id}")
                         self.add_log(f"  券商代碼: {account.broker_id}")
                         self.add_log(f"  帳戶代碼: {account.account_id}")
@@ -429,11 +475,125 @@ class KGITradingGUI:
         self.add_log("客戶端狀態:")
         self.add_log(f"  模擬模式: {'是' if info['simulation_mode'] else '否'}")
         self.add_log(f"  已登入: {'✅' if info['logged_in'] else '❌'}")
-        self.add_log(f"  帳戶數量: {info['account_count']}")
-        self.add_log(f"  證券帳戶: {'✅' if info['has_stock_account'] else '❌'}")
-        self.add_log(f"  期貨帳戶: {'✅' if info['has_futures_account'] else '❌'}")
+        self.add_log(f"  目前帳戶數量: {info['account_count']}")
+        self.add_log(f"  總帳戶數量: {info.get('total_accounts', 0)}")
+        self.add_log(f"  證券帳戶: {info.get('stock_accounts', 0)} 個")
+        self.add_log(f"  期貨帳戶: {info.get('futures_accounts', 0)} 個")
+        self.add_log(f"  證券帳戶狀態: {'✅' if info['has_stock_account'] else '❌'}")
+        self.add_log(f"  期貨帳戶狀態: {'✅' if info['has_futures_account'] else '❌'}")
         self.add_log(f"  合約狀態: {info['contracts_status']}")
         self.add_log("-" * 40)
+
+    def switch_account_type(self):
+        """Switch account type without re-login."""
+        if not self.client or not self.client.is_connected():
+            self.add_log("尚未登入", "WARNING")
+            return
+        
+        # Get current account type selection
+        account_type = self.account_type_var.get()
+        
+        self.add_log(f"切換帳戶類型至: {account_type}")
+        
+        success = self.client.switch_account_type(account_type)
+        
+        if success:
+            self.add_log("帳戶類型切換成功", "SUCCESS")
+            self.show_accounts()
+        else:
+            self.add_log("帳戶類型切換失敗", "ERROR")
+
+    def show_account_details(self):
+        """Show detailed account information."""
+        if not self.client or not self.client.is_connected():
+            self.add_log("尚未登入", "WARNING")
+            return
+        
+        self.add_log("獲取詳細帳戶信息...")
+        
+        try:
+            details = self.client.get_all_account_details()
+            
+            self.add_log("-" * 50)
+            self.add_log("詳細帳戶信息:")
+            self.add_log(f"  總帳戶數: {details['total_accounts']}")
+            self.add_log(f"  當前可見帳戶數: {details['current_visible_accounts']}")
+            self.add_log("")
+            
+            for account in details['accounts']:
+                self.add_log(f"帳戶 {account['index']}: {account['type']}")
+                self.add_log(f"  帳戶ID: {account['account_id']}")
+                self.add_log(f"  身份證字號: {account['person_id']}")
+                self.add_log(f"  券商代碼: {account['broker_id']}")
+                self.add_log(f"  簽署狀態: {account['signed']}")
+                self.add_log(f"  目前可見: {'✅' if account['is_visible_in_current_filter'] else '❌'}")
+                self.add_log(f"  預設證券帳戶: {'✅' if account['is_default_stock'] else '❌'}")
+                self.add_log(f"  預設期貨帳戶: {'✅' if account['is_default_futures'] else '❌'}")
+                if 'trader' in account:
+                    self.add_log(f"  交易員: {account['trader']}")
+                self.add_log("")
+            
+            self.add_log("-" * 50)
+            
+        except Exception as e:
+            self.add_log(f"獲取帳戶詳情時發生錯誤: {str(e)}", "ERROR")
+
+    def test_account_capabilities(self):
+        """Test account capabilities."""
+        if not self.client or not self.client.is_connected():
+            self.add_log("尚未登入", "WARNING")
+            return
+        
+        self.add_log("測試帳戶功能...")
+        
+        try:
+            capabilities = self.client.test_account_capabilities()
+            
+            self.add_log("-" * 50)
+            self.add_log("帳戶功能測試結果:")
+            
+            # 測試證券帳戶
+            if capabilities.get('stock_account_test'):
+                stock_test = capabilities['stock_account_test']
+                if 'error' in stock_test:
+                    self.add_log(f"證券帳戶測試錯誤: {stock_test['error']}", "ERROR")
+                else:
+                    self.add_log("證券帳戶:")
+                    self.add_log(f"  帳戶ID: {stock_test['account_id']}")
+                    self.add_log(f"  類型: {stock_test['type']}")
+                    self.add_log(f"  簽署狀態: {stock_test['signed']}")
+                    self.add_log(f"  可用方法數: {len(stock_test['available_methods'])}")
+            else:
+                self.add_log("無證券帳戶或未設為預設", "WARNING")
+            
+            # 測試期貨帳戶
+            if capabilities.get('futures_account_test'):
+                futures_test = capabilities['futures_account_test']
+                if 'error' in futures_test:
+                    self.add_log(f"期貨帳戶測試錯誤: {futures_test['error']}", "ERROR")
+                else:
+                    self.add_log("期貨帳戶:")
+                    self.add_log(f"  帳戶ID: {futures_test['account_id']}")
+                    self.add_log(f"  類型: {futures_test['type']}")
+                    self.add_log(f"  簽署狀態: {futures_test['signed']}")
+                    self.add_log(f"  可用方法數: {len(futures_test['available_methods'])}")
+            else:
+                self.add_log("無期貨帳戶或未設為預設", "WARNING")
+            
+            # 測試合約信息
+            if capabilities.get('contracts_info'):
+                contracts_info = capabilities['contracts_info']
+                if 'error' in contracts_info:
+                    self.add_log(f"合約信息錯誤: {contracts_info['error']}", "ERROR")
+                else:
+                    self.add_log("合約信息:")
+                    self.add_log(f"  狀態: {contracts_info['status']}")
+                    self.add_log(f"  可用方法數: {len(contracts_info['available_methods'])}")
+            
+            self.add_log("-" * 50)
+            
+        except Exception as e:
+            self.add_log(f"測試帳戶功能時發生錯誤: {str(e)}", "ERROR")
     
     def on_closing(self):
         """Handle window close event."""

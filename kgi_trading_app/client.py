@@ -28,6 +28,7 @@ class KGITradingClient:
         self.api = sp.SuperPy(simulation=simulation)
         self.is_logged_in = False
         self.accounts = []
+        self.all_accounts = []  # Store all accounts from original login
         self.stock_account = None
         self.futopt_account = None
         
@@ -38,7 +39,8 @@ class KGITradingClient:
         )
         self.logger = logging.getLogger(__name__)
         
-    def login(self, user_id: str, password: str, fetch_contract: bool = True) -> bool:
+    def login(self, user_id: str, password: str, fetch_contract: bool = True, 
+              account_type: str = "all") -> bool:
         """
         Login to KGI Securities system.
         
@@ -46,6 +48,7 @@ class KGITradingClient:
             user_id (str): User ID for login
             password (str): Password for login
             fetch_contract (bool): Whether to fetch contract data (default: True)
+            account_type (str): Account type to use ("stock", "futures", "all")
             
         Returns:
             bool: True if login successful, False otherwise
@@ -65,7 +68,11 @@ class KGITradingClient:
             
             if self.accounts:
                 self.is_logged_in = True
+                self.all_accounts = self.accounts.copy()  # Save all accounts
                 self.logger.info(f"Login successful. Found {len(self.accounts)} accounts.")
+                
+                # Filter accounts based on type preference
+                self._filter_accounts_by_type(account_type)
                 
                 # Set default accounts
                 self._set_default_accounts()
@@ -94,6 +101,7 @@ class KGITradingClient:
                 self.api.logout()
                 self.is_logged_in = False
                 self.accounts = []
+                self.all_accounts = []
                 self.stock_account = None
                 self.futopt_account = None
                 self.logger.info("Logout successful")
@@ -123,8 +131,71 @@ class KGITradingClient:
         except:
             pass
     
+    def _filter_accounts_by_type(self, account_type: str):
+        """Filter accounts based on requested type."""
+        if account_type.lower() == "stock":
+            self.accounts = [acc for acc in self.accounts if "Stock" in str(type(acc))]
+            self.logger.info(f"Filtered to stock accounts only: {len(self.accounts)} accounts")
+        elif account_type.lower() == "futures":
+            self.accounts = [acc for acc in self.accounts if "Future" in str(type(acc))]
+            self.logger.info(f"Filtered to futures accounts only: {len(self.accounts)} accounts")
+        # "all" - keep all accounts
+    
+    def get_available_account_types(self) -> dict:
+        """
+        Get available account types from current login.
+        
+        Returns:
+            dict: Available account types with counts
+        """
+        if not self.is_logged_in:
+            return {"stock": 0, "futures": 0}
+            
+        stock_count = len([acc for acc in self.accounts if "Stock" in str(type(acc))])
+        futures_count = len([acc for acc in self.accounts if "Future" in str(type(acc))])
+        
+        return {
+            "stock": stock_count,
+            "futures": futures_count,
+            "total": len(self.accounts)
+        }
+    
+    def switch_account_type(self, account_type: str) -> bool:
+        """
+        Switch to specific account type without re-login.
+        
+        Args:
+            account_type (str): Account type ("stock", "futures", "all")
+            
+        Returns:
+            bool: True if switch successful
+        """
+        if not self.is_logged_in:
+            self.logger.warning("Not logged in")
+            return False
+            
+        # Use stored all_accounts instead of calling API again
+        if account_type.lower() == "stock":
+            filtered_accounts = [acc for acc in self.all_accounts if "Stock" in str(type(acc))]
+        elif account_type.lower() == "futures":
+            filtered_accounts = [acc for acc in self.all_accounts if "Future" in str(type(acc))]
+        else:  # "all"
+            filtered_accounts = self.all_accounts.copy()
+            
+        if filtered_accounts:
+            self.accounts = filtered_accounts
+            self._set_default_accounts()
+            self.logger.info(f"Switched to {account_type} accounts: {len(self.accounts)} accounts")
+            return True
+        else:
+            self.logger.warning(f"No {account_type} accounts found")
+            return False
+    
     def _set_default_accounts(self):
         """Set default stock and futures/options accounts."""
+        self.stock_account = None
+        self.futopt_account = None
+        
         for account in self.accounts:
             if hasattr(account, 'signed') and account.signed:
                 if 'Stock' in str(type(account)):
@@ -210,6 +281,111 @@ class KGITradingClient:
         """
         return self.is_logged_in
     
+    def get_all_account_details(self) -> dict:
+        """
+        Get detailed information about all available accounts.
+        
+        Returns:
+            dict: Detailed account information
+        """
+        if not self.is_logged_in:
+            return {"error": "Not logged in", "accounts": []}
+        
+        account_details = {
+            "total_accounts": len(self.all_accounts),
+            "current_visible_accounts": len(self.accounts),
+            "accounts": []
+        }
+        
+        for i, account in enumerate(self.all_accounts):
+            account_type = "Stock" if "Stock" in str(type(account)) else "Future"
+            signed_status = "Signed" if hasattr(account, 'signed') and account.signed else "Not Signed"
+            is_visible = account in self.accounts
+            
+            account_info = {
+                "index": i + 1,
+                "type": account_type,
+                "person_id": getattr(account, 'person_id', 'N/A'),
+                "broker_id": getattr(account, 'broker_id', 'N/A'),
+                "account_id": getattr(account, 'account_id', 'N/A'),
+                "signed": signed_status,
+                "is_visible_in_current_filter": is_visible,
+                "is_default_stock": account == self.stock_account,
+                "is_default_futures": account == self.futopt_account
+            }
+            
+            if hasattr(account, 'trader') and account.trader:
+                account_info['trader'] = account.trader
+                
+            account_details["accounts"].append(account_info)
+        
+        return account_details
+    
+    def test_account_capabilities(self) -> dict:
+        """
+        Test what capabilities each account type has.
+        
+        Returns:
+            dict: Test results for different account types
+        """
+        if not self.is_logged_in:
+            return {"error": "Not logged in"}
+        
+        results = {
+            "stock_account_test": None,
+            "futures_account_test": None,
+            "contracts_info": None
+        }
+        
+        # Test stock account capabilities
+        if self.stock_account:
+            try:
+                # Try to access stock-related methods
+                results["stock_account_test"] = {
+                    "account_id": self.stock_account.account_id,
+                    "type": str(type(self.stock_account)),
+                    "signed": getattr(self.stock_account, 'signed', False),
+                    "available_methods": [method for method in dir(self.stock_account) 
+                                        if not method.startswith('_') and callable(getattr(self.stock_account, method))]
+                }
+            except Exception as e:
+                results["stock_account_test"] = {"error": str(e)}
+        
+        # Test futures account capabilities  
+        if self.futopt_account:
+            try:
+                results["futures_account_test"] = {
+                    "account_id": self.futopt_account.account_id,
+                    "type": str(type(self.futopt_account)),
+                    "signed": getattr(self.futopt_account, 'signed', False),
+                    "available_methods": [method for method in dir(self.futopt_account) 
+                                        if not method.startswith('_') and callable(getattr(self.futopt_account, method))]
+                }
+            except Exception as e:
+                results["futures_account_test"] = {"error": str(e)}
+        
+        # Test contracts information
+        try:
+            if hasattr(self.api, 'Contracts'):
+                results["contracts_info"] = {
+                    "status": getattr(self.api.Contracts, 'status', 'Unknown'),
+                    "available_methods": [method for method in dir(self.api.Contracts) 
+                                        if not method.startswith('_')]
+                }
+        except Exception as e:
+            results["contracts_info"] = {"error": str(e)}
+        
+        return results
+
+    def is_connected(self) -> bool:
+        """
+        Check if client is connected and logged in.
+        
+        Returns:
+            bool: True if connected and logged in
+        """
+        return self.is_logged_in
+    
     def get_client_info(self) -> dict:
         """
         Get client information.
@@ -217,10 +393,15 @@ class KGITradingClient:
         Returns:
             dict: Client information
         """
+        account_types = self.get_available_account_types()
+        
         return {
             "simulation_mode": self.simulation,
             "logged_in": self.is_logged_in,
             "account_count": len(self.accounts),
+            "total_accounts": account_types.get("total", 0),
+            "stock_accounts": account_types.get("stock", 0),
+            "futures_accounts": account_types.get("futures", 0),
             "has_stock_account": self.stock_account is not None,
             "has_futures_account": self.futopt_account is not None,
             "contracts_status": self.get_contracts_status()
